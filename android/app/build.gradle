@@ -1,0 +1,35 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.superessence.lastmarket'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.superessence.lastmarket'
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // Le jeu web compilé (game/dist) est copié dans les assets par la tâche syncGameAssets.
+    sourceSets { main { assets.srcDirs = ['build/generated/gameAssets'] } }
+    androidResources { noCompress += ['js', 'json', 'html'] }
+}
+
+tasks.register('syncGameAssets', Copy) {
+    from "${rootDir}/../game/dist"
+    into "${buildDir}/generated/gameAssets/game"
+}
+preBuild.dependsOn syncGameAssets
+
