@@ -431,12 +431,15 @@ export class WorldView {
     this.hemi.intensity = hemiI;
     this.hemi.color.set(day > 0.3 ? '#c4d6f0' : '#5a6a90');
     this.renderer.toneMappingExposure = 0.85 + (1 - day) * 0.35;
+    // à l'intérieur, les réflexions du ciel sont fortement atténuées
+    this._indoorK = (this._indoorK ?? 0) + (((inside && inside.isIndoor(cam.x, cam.z)) ? 1 : 0) - (this._indoorK ?? 0)) * Math.min(1, dt * 8);
+    if (this.envRT) this.scene.environmentIntensity = (0.15 + day * 0.85) * (1 - this._indoorK * 0.7);
     // brouillard
     const fogCol = new THREE.Color().setHSL(0.58, 0.15, 0.08 + day * 0.55 * cloudDim);
     if (wx.lightning > 0.3) fogCol.setRGB(0.6, 0.65, 0.75);
     this.scene.fog.color.copy(fogCol);
     this.scene.fog.density = 0.0018 + wx.fog * 0.045 + (1 - day) * 0.004 + wx.rain * 0.004 + (g.horror.majorEvent ? 0.02 : 0);
-    if (inside && inside.isIndoor(cam.x, cam.z)) this.scene.fog.density *= 0.3;
+    if (inside && inside.isIndoor(cam.x, cam.z)) this.scene.fog.density *= 0.04;
     this.renderer.setClearColor(fogCol);
     // carte d'environnement (réflexions PBR) recalculée périodiquement
     if (Math.abs(clk.minutes - this.envT) > 20 || this._envWeather !== wx.state) {

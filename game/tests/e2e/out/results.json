@@ -1,8 +1,92 @@
 [
   {
+    "name": "01_menu_studio",
+    "ok": true,
+    "ms": 2219,
+    "msg": "13 entrées, 8 pages ouvertes"
+  },
+  {
+    "name": "02_nouvelle_partie_ui",
+    "ok": true,
+    "ms": 30923,
+    "msg": "J1 Lun. 07:00Dégagé 5°6000,00 €⭐ 50Fermé"
+  },
+  {
+    "name": "03_deplacement_clavier",
+    "ok": true,
+    "ms": 28347,
+    "msg": "16.5 m parcourus, endurance 0.76"
+  },
+  {
+    "name": "04_porte_et_interaction",
+    "ok": true,
+    "ms": 36025,
+    "msg": "Porte automatique"
+  },
+  {
+    "name": "05_logistique_livraison_rangement_rayon",
+    "ok": true,
+    "ms": 19452,
+    "msg": "+10 céréales en rayon"
+  },
+  {
     "name": "06_construction_ui",
     "ok": true,
-    "ms": 66012,
+    "ms": 43646,
     "msg": "placé puis annulé (64→65→64)"
+  },
+  {
+    "name": "07_caisse_jouee",
+    "ok": true,
+    "ms": 45867,
+    "msg": "paiement card, +4.30 €"
+  },
+  {
+    "name": "08_maison_manger_dormir",
+    "ok": true,
+    "ms": 31045,
+    "msg": "réveil à 6.0 h, énergie 100"
+  },
+  {
+    "name": "09_conduite",
+    "ok": true,
+    "ms": 29328,
+    "msg": "28.1 m, 51 km/h"
+  },
+  {
+    "name": "10_nuit_creature_cachette",
+    "ok": true,
+    "ms": 24141,
+    "msg": "toujours caché, santé 100"
+  },
+  {
+    "name": "11_sauvegarde_chargement",
+    "ok": true,
+    "ms": 60698,
+    "msg": "argent et prix restaurés après rechargement de la page"
+  },
+  {
+    "name": "12_mods_import_et_contenu",
+    "ok": true,
+    "ms": 9086,
+    "msg": "watcher, stalker, mimic, woods, coureur_pale"
+  },
+  {
+    "name": "13_studio_creature_test",
+    "ok": true,
+    "ms": 34957,
+    "msg": "créature personnalisée apparue en jeu"
+  },
+  {
+    "name": "14_tactile",
+    "ok": true,
+    "ms": 71025,
+    "msg": "14 boutons, joystick 5.4 m"
+  },
+  {
+    "name": "15_performance",
+    "ok": true,
+    "ms": 132322,
+    "msg": "magasin: 635.5 ms/img (logiciel), 254 appels, 410k tri · parking: 1487.4 ms/img (logiciel), 325 appels, 413k tri · foret_nuit: 1285.7 ms/img (logiciel), 465 appels, 483k tri · maison: 1162.4 ms/img (logiciel), 378 appels, 399k tri"
   }
 ]
