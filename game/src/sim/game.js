@@ -18,7 +18,7 @@ import { Director } from './director.js';
 import { BuildSystem } from './build.js';
 import { Interactions } from './interact.js';
 
-export const GAME_VERSION = '0.1.0';
+export const GAME_VERSION = '0.2.0';
 
 export const DIFFICULTIES = {
   calm: { name: 'Paisible', monsterAggression: 0.6, monsterDamage: 0.6, horrorRate: 0.6, needsRate: 0.75, customerRate: 1.1, startMoney: 9000 },

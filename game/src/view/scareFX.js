@@ -82,7 +82,7 @@ export class ScareFX {
     // --- faisceaux
     const flashOn = p.flashlight && p.battery > 0 && !p.vehicle;
     this.flashBeam.visible = flashOn && !this.app.cameraFeed;
-    this.flashBeam.material.uniforms.uIntensity.value = (0.09 + fog * 0.3 + night * 0.1) * (wv.flash.intensity / 28);
+    this.flashBeam.material.uniforms.uIntensity.value = (0.09 + fog * 0.3 + night * 0.1) * (wv.flash.intensity / 46);
     const lamps = [];
     if (night > 0.4 && game.power.grid) for (const l of game.world.streetLights) { const d = Math.hypot(l.x - cam.x, l.z - cam.z); if (d < 70) lamps.push({ l, d }); }
     lamps.sort((a, b) => a.d - b.d);

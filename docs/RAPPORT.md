@@ -1,4 +1,4 @@
-# SUPERESSENCE — LAST MARKET · Compte rendu (version 0.1.0)
+# SUPERESSENCE — LAST MARKET · Compte rendu (version 0.2.0)
 
 Ce document dit précisément ce qui fonctionne, comment ça a été vérifié, et ce qui reste limité.
 Rien n'est déclaré « terminé » sans test ; les limites sont listées sans détour en fin de document.
@@ -82,6 +82,7 @@ Rien n'est déclaré « terminé » sans test ; les limites sont listées sans d
 - **Architecture** : soubassement béton, gouttières, acrotère, façade brique du magasin avec enseigne lumineuse « SuperEssence. » et auvent éclairé.
 - **Post-traitement** : halo des lumières la nuit (bloom), étalonnage (ombres froides la nuit, contraste, désaturation sous stress), vignette qui bat au rythme cardiaque, grain de pellicule, aberration chromatique quand une créature approche, flash rouge à l'impact, lignes de balayage sur les caméras. Mode Performance : sans bloom.
 - **Lumière et brouillard** : nuits beaucoup plus noires (lune faible, nuits sans lune), brouillard nocturne dense, faisceau volumétrique de la lampe torche, cônes de lumière des lampadaires et des phares, brume rasante la nuit, intérieurs moins surexposés.
+- **Performances maîtrisées** : malgré des modèles plus riches, la charge reste de 350 k à 500 k triangles par image (ombres comprises) grâce à des cellules de forêt de 50 m (la carte d'ombres ne traite que les arbres proches), des sapins à ~220 triangles, des produits dessinés seulement près du magasin et un niveau de détail figé pour les personnages éloignés. Le nombre d'appels de dessin a augmenté (460 à 670) à cause des passes de post-traitement et des effets.
 - **Peur** : yeux qui brillent en lisière de forêt (disparaissent sous la lampe), silhouettes en vision périphérique qui s'évanouissent quand on les regarde, pas qui s'approchent derrière le joueur, brindilles qui craquent, hiboux, hurlements et cris lointains, chuchotements sous fort stress, respiration haletante, lampadaires qui grésillent et clignotent, balancement de caméra lié au stress et à l'essoufflement.
 
 ## 3. Tests réalisés

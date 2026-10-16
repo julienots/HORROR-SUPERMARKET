@@ -9,8 +9,8 @@ import { FIXTURES } from '../sim/catalog.js';
 const SHAPES = {
   box: () => boxGeo(0.16, 0.24, 0.07), can: () => new THREE.CylinderGeometry(0.035, 0.035, 0.12, 10).translate(0, 0, 0),
   bottle: () => { const a = new THREE.CylinderGeometry(0.045, 0.045, 0.22, 10); const b = new THREE.CylinderGeometry(0.015, 0.035, 0.08, 8).translate(0, 0.15, 0); return mergeGeo([a, b]); },
-  jar: () => new THREE.CylinderGeometry(0.045, 0.045, 0.12, 12), bag: () => { const g = new THREE.SphereGeometry(0.1, 8, 6); g.scale(1, 1.3, 0.45); return g; },
-  fruit: () => new THREE.SphereGeometry(0.045, 8, 6), carton: () => { const a = boxGeo(0.08, 0.2, 0.08); const b = new THREE.ConeGeometry(0.06, 0.05, 4).rotateY(Math.PI / 4).translate(0, 0.125, 0); return mergeGeo([a, b]); },
+  jar: () => new THREE.CylinderGeometry(0.045, 0.045, 0.12, 12), bag: () => { const g = new THREE.SphereGeometry(0.1, 7, 5); g.scale(1, 1.3, 0.45); return g; },
+  fruit: () => new THREE.IcosahedronGeometry(0.045, 1), carton: () => { const a = boxGeo(0.08, 0.2, 0.08); const b = new THREE.ConeGeometry(0.06, 0.05, 4).rotateY(Math.PI / 4).translate(0, 0.125, 0); return mergeGeo([a, b]); },
   tray: () => boxGeo(0.22, 0.05, 0.15), loaf: () => { const g = new THREE.CapsuleGeometry(0.05, 0.22, 4, 8); g.rotateZ(Math.PI / 2); return g; }, tub: () => new THREE.CylinderGeometry(0.06, 0.05, 0.08, 12),
 };
 function mergeGeo(list) {
@@ -217,7 +217,11 @@ export class EntityView {
     }
     this.cases.count = k; this.caseLabels.count = k;
     this.cases.instanceMatrix.needsUpdate = true; this.caseLabels.instanceMatrix.needsUpdate = true; if (this.caseLabels.instanceColor) this.caseLabels.instanceColor.needsUpdate = true;
-    if (this.prodDirty || (this._prodT = (this._prodT || 0) + dt) > 3) { this._prodT = 0; this._rebuildProducts(); }
+    // produits : dessinés seulement quand la caméra est près du magasin (sinon invisibles de toute façon)
+    const st = g.store.structure;
+    const near = st && Math.hypot(st.ox + st.w / 2 - cam.x, st.oz + st.d / 2 - cam.z) < Math.max(st.w, st.d) * 0.5 + 22;
+    for (const { im, lb } of Object.values(this.prodMeshes)) { im.visible = near; lb.visible = near && (Math.hypot(st.ox + st.w / 2 - cam.x, st.oz + st.d / 2 - cam.z) < Math.max(st.w, st.d) * 0.5 + 4); }
+    if (near && (this.prodDirty || (this._prodT = (this._prodT || 0) + dt) > 3)) { this._prodT = 0; this._rebuildProducts(); }
   }
 }
 

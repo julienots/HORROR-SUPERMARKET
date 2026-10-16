@@ -10,8 +10,8 @@ import { WORLD_HALF } from '../sim/terrain.js';
 import { RNG, clamp } from '../sim/core.js';
 
 export const QUALITY = {
-  performance: { pixelRatio: 0.75, shadowMap: 1024, shadowSize: 34, terrainStep: 4, treeNear: 90, treeFar: 260, grass: 0, rain: 1200, lights: 4, viewDist: 280, flashShadow: false },
-  balanced: { pixelRatio: 1, shadowMap: 2048, shadowSize: 48, terrainStep: 2, treeNear: 130, treeFar: 340, grass: 1400, rain: 2500, lights: 6, viewDist: 380, flashShadow: false },
+  performance: { pixelRatio: 0.75, shadowMap: 1024, shadowSize: 34, terrainStep: 4, treeNear: 60, treeFar: 260, grass: 0, rain: 1200, lights: 4, viewDist: 280, flashShadow: false },
+  balanced: { pixelRatio: 1, shadowMap: 2048, shadowSize: 48, terrainStep: 2, treeNear: 95, treeFar: 340, grass: 1400, rain: 2500, lights: 6, viewDist: 380, flashShadow: false },
   quality: { pixelRatio: 1.5, shadowMap: 2048, shadowSize: 64, terrainStep: 2, treeNear: 180, treeFar: 420, grass: 3000, rain: 4000, lights: 8, viewDist: 480, flashShadow: true },
 };
 
@@ -93,7 +93,7 @@ export class WorldView {
     this.scene.add(this.hemi);
     this.pool = [];
     for (let i = 0; i < this.q.lights; i++) { const l = new THREE.PointLight('#ffe8c8', 0, 14, 1.6); this.scene.add(l); this.pool.push(l); }
-    this.flash = new THREE.SpotLight('#fff6e8', 0, 32, 0.42, 0.45, 1.4);
+    this.flash = new THREE.SpotLight('#fff6e8', 0, 42, 0.48, 0.5, 1.25);
     this.flash.castShadow = this.q.flashShadow; this.flash.shadow.mapSize.set(512, 512); this.flash.shadow.bias = -0.0005;
     this.scene.add(this.flash); this.scene.add(this.flash.target);
     this.headL = new THREE.SpotLight('#fff8e0', 0, 60, 0.45, 0.5, 1.2); this.headR = this.headL.clone();
@@ -228,21 +228,21 @@ export class WorldView {
     const trunk = (h, r0, r1, seg = 9) => { const g = new THREE.CylinderGeometry(r1, r0, h, seg, 6); g.translate(0, h / 2, 0); const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); const flare = y < 0.8 ? 1 + (0.8 - y) * 0.6 : 1; const n = 1 + Math.sin(p.getX(i) * 40 + y * 3) * 0.06; p.setX(i, p.getX(i) * flare * n); p.setZ(i, p.getZ(i) * flare * n); } g.computeVertexNormals(); return g; };
     // sapin : 8 étages de branches irrégulières qui retombent, plus sombres vers le tronc
     const layers = [];
-    for (let k = 0; k < 8; k++) {
-      const R = 2.9 - k * 0.33, H = 2.3 - k * 0.1, y0 = 2.2 + k * 1.15;
-      const c = new THREE.ConeGeometry(R, H, 11, 3, true);
+    for (let k = 0; k < 6; k++) {
+      const R = 2.9 - k * 0.42, H = 2.6 - k * 0.12, y0 = 2.2 + k * 1.5;
+      const c = new THREE.ConeGeometry(R, H, 9, 2, true);
       const p = c.attributes.position;
       for (let i = 0; i < p.count; i++) {
         const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
         const rr = Math.hypot(x, z) / R;
         const ang = Math.atan2(z, x);
-        const jag = 1 + Math.sin(ang * 11 + k * 1.7) * 0.18 * rr + rnd.range(-0.08, 0.08) * rr;
+        const jag = 1 + Math.sin(ang * 9 + k * 1.7) * 0.2 * rr + rnd.range(-0.08, 0.08) * rr;
         p.setXYZ(i, x * jag, y - rr * rr * 0.55, z * jag); // pointes tombantes
       }
       c.rotateY(k * 0.7); c.translate(0, y0, 0);
       layers.push(c);
     }
-    const tip = new THREE.ConeGeometry(0.5, 1.6, 7); tip.translate(0, 2.2 + 8 * 1.15 + 0.3, 0); layers.push(tip);
+    const tip = new THREE.ConeGeometry(0.5, 1.6, 6); tip.translate(0, 2.2 + 6 * 1.5 + 0.1, 0); layers.push(tip);
     const pineFol = mergeGeometries(layers.map((l) => l.index ? l.toNonIndexed() : l));
     pineFol.computeVertexNormals();
     colorize(pineFol, (x, y, z) => { const rr = Math.min(1, Math.hypot(x, z) / 2.6); const k = 0.35 + rr * 0.65; return [0.035 * k + 0.004, 0.062 * k + 0.006, 0.03 * k + 0.004]; });
@@ -250,7 +250,7 @@ export class WorldView {
     const pineFar = new THREE.ConeGeometry(2.7, 11, 7); pineFar.translate(0, 7.3, 0); noisy(pineFar, 0.15);
     const birchTrunk = trunk(9.5, 0.2, 0.09, 8);
     const blobs = [];
-    for (let k = 0; k < 26; k++) { const b = new THREE.IcosahedronGeometry(0.45 + rnd.range(0, 0.45), 1); noisy(b, 0.45); const a = rnd.range(0, 6.28), rr = rnd.range(0.4, 1.9), y = 4.6 + rnd.range(0, 4.6); b.scale(1, 0.75, 1); b.translate(Math.cos(a) * rr * (1 - (y - 4.6) / 7), y, Math.sin(a) * rr * (1 - (y - 4.6) / 7)); blobs.push(b); }
+    for (let k = 0; k < 14; k++) { const b = new THREE.IcosahedronGeometry(0.55 + rnd.range(0, 0.5), 0); noisy(b, 0.35); const a = rnd.range(0, 6.28), rr = rnd.range(0.4, 1.9), y = 4.6 + rnd.range(0, 4.6); b.scale(1, 0.75, 1); b.translate(Math.cos(a) * rr * (1 - (y - 4.6) / 7), y, Math.sin(a) * rr * (1 - (y - 4.6) / 7)); blobs.push(b); }
     const birchFol = mergeGeometries(blobs.map((b) => b.index ? b.toNonIndexed() : b));
     birchFol.computeVertexNormals();
     colorize(birchFol, (x, y) => { const k = 0.55 + Math.min(0.45, (y - 5) / 9); return [0.09 * k, 0.15 * k, 0.035 * k]; });
@@ -263,7 +263,7 @@ export class WorldView {
     const needles = addWind(new THREE.MeshStandardMaterial({ color: '#ffffff', vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }), 1);
     const leaves = addWind(new THREE.MeshStandardMaterial({ color: '#ffffff', vertexColors: true, roughness: 0.9, flatShading: true }), 1.5);
     const far = new THREE.MeshStandardMaterial({ color: '#16220f', roughness: 1, flatShading: true });
-    const CELL = 100;
+    const CELL = 50;
     const cells = new Map();
     for (const tr of this.g.world.trees) {
       const k = `${Math.floor(tr.x / CELL)},${Math.floor(tr.z / CELL)}`;
@@ -480,8 +480,8 @@ export class WorldView {
     // LOD de la forêt
     for (const c of this.treeCells) {
       const d = Math.hypot(c.cx - cam.x, c.cz - cam.z);
-      c.near.visible = d < this.q.treeNear + 70;
-      c.far.visible = !c.near.visible && d < this.q.treeFar + 70;
+      c.near.visible = d < this.q.treeNear + 35;
+      c.far.visible = !c.near.visible && d < this.q.treeFar + 35;
     }
     this._updateGrass(cam.x, cam.z);
     // bâtiments : animation et visibilité des intérieurs lointains
@@ -526,7 +526,7 @@ export class WorldView {
     // lampe torche
     const p = g.player;
     const on = p.flashlight && p.battery > 0 && !p.vehicle;
-    this.flash.intensity = on ? 28 * (p.battery < 0.15 ? (Math.random() < 0.2 ? 0.2 : 1) : 1) : 0;
+    this.flash.intensity = on ? 46 * (p.battery < 0.15 ? (Math.random() < 0.2 ? 0.2 : 1) : 1) : 0;
     if (on) {
       const fw = p.forward;
       this.flash.position.set(cam.x + Math.cos(p.yaw) * 0.25, cam.y - 0.25, cam.z - Math.sin(p.yaw) * 0.25);
