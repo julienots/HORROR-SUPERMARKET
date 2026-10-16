@@ -1,0 +1,154 @@
+{
+  "format": "superessence-mod",
+  "formatVersion": 1,
+  "id": "exemple.halloween",
+  "name": "Pack Halloween",
+  "version": "1.0.0",
+  "author": "SuperEssence Studio",
+  "description": "Produits saisonniers, décorations et un événement de citrouilles.",
+  "gameVersion": ">=0.1.0",
+  "dependencies": [],
+  "content": {
+    "products": [
+      {
+        "id": "candy_bag",
+        "name": "Bonbons d'Halloween",
+        "cat": "seasonal",
+        "buy": 1.6,
+        "sell": 3.4,
+        "size": 3,
+        "shelfLife": 120,
+        "demand": 0.6,
+        "caseQty": 12,
+        "shape": "bag",
+        "color": "#e07020",
+        "color2": "#202020"
+      },
+      {
+        "id": "pumpkin_soup",
+        "name": "Velouté de potiron",
+        "cat": "canned",
+        "buy": 1.1,
+        "sell": 2.3,
+        "size": 1,
+        "shelfLife": null,
+        "demand": 0.35,
+        "caseQty": 24,
+        "shape": "can",
+        "color": "#e08a20",
+        "color2": "#ffffff"
+      },
+      {
+        "id": "black_candles",
+        "name": "Bougies noires x6",
+        "cat": "seasonal",
+        "buy": 1.5,
+        "sell": 3.9,
+        "size": 2,
+        "shelfLife": null,
+        "demand": 0.25,
+        "caseQty": 12,
+        "shape": "box",
+        "color": "#151515",
+        "color2": "#a01010"
+      }
+    ],
+    "fixtures": {
+      "pumpkin_pile": {
+        "name": "Tas de citrouilles",
+        "cat": "décor",
+        "fp": [
+          1,
+          1
+        ],
+        "h": 0.7,
+        "block": true,
+        "cost": 45,
+        "where": "any",
+        "decor": true,
+        "model": {
+          "shape": "sphere",
+          "color": "#e07020"
+        }
+      },
+      "scarecrow": {
+        "name": "Épouvantail",
+        "cat": "décor",
+        "fp": [
+          1,
+          1
+        ],
+        "h": 1.9,
+        "block": true,
+        "cost": 70,
+        "where": "any",
+        "decor": true,
+        "model": {
+          "shape": "cylinder",
+          "color": "#8a6a3a",
+          "label": "???"
+        }
+      },
+      "halloween_stand": {
+        "name": "Présentoir Halloween",
+        "cat": "vente",
+        "fp": [
+          2,
+          1
+        ],
+        "h": 1.2,
+        "block": true,
+        "slots": 4,
+        "storage": "ambient",
+        "cost": 210,
+        "where": "store",
+        "model": {
+          "shape": "box",
+          "color": "#3a1a40",
+          "label": "HALLOWEEN",
+          "labelBg": "#e07020",
+          "labelFg": "#000000"
+        }
+      }
+    },
+    "events": [
+      {
+        "id": "halloween_pumpkins",
+        "name": "Les citrouilles sourient",
+        "category": "atmosphère",
+        "weight": 1.5,
+        "cooldown": 900,
+        "conditions": {
+          "night": true,
+          "playerLocation": [
+            "house",
+            "outdoor"
+          ]
+        },
+        "variants": [
+          [
+            {
+              "type": "knock",
+              "at": "houseDoor",
+              "count": 3
+            },
+            {
+              "type": "wait",
+              "seconds": 4
+            },
+            {
+              "type": "notify",
+              "text": "Quelqu'un a déposé une citrouille creusée sur ton perron. Elle sourit.",
+              "kind": "warn"
+            },
+            {
+              "type": "footprints",
+              "at": "houseDoor",
+              "count": 12
+            }
+          ]
+        ]
+      }
+    ]
+  }
+}

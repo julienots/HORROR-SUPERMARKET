@@ -1,0 +1,69 @@
+{
+  "format": "superessence-mod",
+  "formatVersion": 1,
+  "id": "exemple.coureur-pale",
+  "name": "Le Coureur pâle",
+  "version": "1.0.0",
+  "author": "SuperEssence Studio",
+  "description": "Une variante du Traqueur, plus rapide mais plus fragile face à la lumière, et un événement qui l'invoque.",
+  "gameVersion": ">=0.1.0",
+  "dependencies": [],
+  "content": {
+    "creatures": [
+      {
+        "id": "coureur_pale",
+        "name": "Le Coureur pâle",
+        "base": "stalker",
+        "spawnInWorld": true,
+        "params": {
+          "run": 8.2,
+          "walk": 2.2,
+          "vision": 55,
+          "smell": 1.4,
+          "aggression": 0.9,
+          "damage": 18,
+          "scale": 0.9,
+          "lightTolerance": 0.2,
+          "color": "#d8d2c8",
+          "eyeColor": "#ff2020"
+        }
+      }
+    ],
+    "events": [
+      {
+        "id": "coureur_cri",
+        "name": "Un cri sur la route",
+        "category": "menace",
+        "weight": 1,
+        "cooldown": 1200,
+        "conditions": {
+          "night": true,
+          "minDay": 2,
+          "playerLocation": [
+            "outdoor",
+            "vehicle"
+          ]
+        },
+        "variants": [
+          [
+            {
+              "type": "sound",
+              "sound": "screech",
+              "at": "forest"
+            },
+            {
+              "type": "wait",
+              "seconds": 3
+            },
+            {
+              "type": "spawnCreature",
+              "creature": "coureur_pale",
+              "distance": 45,
+              "duration": 90
+            }
+          ]
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "format": "superessence-mod",
+  "formatVersion": 1,
+  "id": "exemple.halloween-extra",
+  "name": "Halloween : extension",
+  "version": "1.0.0",
+  "author": "SuperEssence Studio",
+  "description": "Exemple de dépendance : nécessite le Pack Halloween ≥ 1.0.0.",
+  "gameVersion": ">=0.1.0",
+  "dependencies": [
+    {
+      "id": "exemple.halloween",
+      "version": ">=1.0.0"
+    }
+  ],
+  "content": {
+    "props": [
+      {
+        "type": "standing_stone",
+        "x": 30,
+        "z": 30,
+        "rot": 0
+      }
+    ],
+    "events": [
+      {
+        "id": "halloween_radio",
+        "name": "Bulletin d'Halloween",
+        "category": "atmosphère",
+        "weight": 1,
+        "cooldown": 1500,
+        "conditions": {
+          "evening": true
+        },
+        "actions": [
+          {
+            "type": "radio",
+            "text": "Radio Blackpine : « Joyeux Halloween… et fermez vos portes. »"
+          }
+        ]
+      }
+    ]
+  }
+}

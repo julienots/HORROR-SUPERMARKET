@@ -1,0 +1,41 @@
+{
+  "format": "superessence-mod",
+  "formatVersion": 1,
+  "id": "exemple.hiver-rude",
+  "name": "Scénario : l'hiver rude",
+  "version": "1.0.0",
+  "author": "SuperEssence Studio",
+  "description": "Un scénario difficile : peu d'argent, clients rares, créatures plus agressives, besoins plus rapides.",
+  "gameVersion": ">=0.1.0",
+  "dependencies": [],
+  "content": {
+    "scenarios": [
+      {
+        "id": "hiver-rude",
+        "name": "L'hiver rude",
+        "description": "Démarre en pleine nuit avec 3 000 € et un magasin équipé. Les créatures sont affamées.",
+        "storeTemplate": "starter",
+        "money": 3000,
+        "hour": 21,
+        "rules": {
+          "monsterAggression": 1.5,
+          "customerRate": 0.8
+        }
+      }
+    ],
+    "difficulty": {
+      "survie": {
+        "name": "Survie",
+        "monsterAggression": 1.6,
+        "monsterDamage": 1.5,
+        "horrorRate": 1.8,
+        "needsRate": 1.4,
+        "customerRate": 0.85,
+        "startMoney": 3000
+      }
+    },
+    "simRules": {
+      "needsRate": 1.15
+    }
+  }
+}
