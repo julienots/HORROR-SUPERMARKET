@@ -147,7 +147,7 @@ export class World {
   // ------------------------------------------------------------------ bâtiments
   _buildStructures() {
     // Terrain du magasin (vide au départ ; construit par le joueur ou modèle de départ)
-    const plot = new Structure({ name: 'Terrain SuperEssence', kind: 'store', ...STORE_PLOT, wallHeight: 4.6, style: 'modern', editable: true, floorY: this.siteY('storeplot') + 0.12 });
+    const plot = new Structure({ name: 'Terrain SuperEssence', kind: 'store', ...STORE_PLOT, wallHeight: 4.6, style: 'brick', editable: true, floorY: this.siteY('storeplot') + 0.12 });
     this.addStructure(plot);
     this.addStructure(makeHouse(this.siteY('house') + 0.35));
     this.addStructure(makeGasStation(this.siteY('gas') + 0.15));

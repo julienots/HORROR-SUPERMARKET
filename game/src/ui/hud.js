@@ -45,7 +45,7 @@ export class HUD {
     this.bubbles = h('div.np', { style: { position: 'absolute', inset: '0' } });
     this.vignette = h('div#vignette'); this.hurt = h('div#hurt'); this.grain = h('div#grain');
     this.sleepEl = h('div#sleep', h('div', 'Zzz…'));
-    this.fx = h('div#fx', this.vignette, this.hurt, this.grain);
+    this.fx = h('div#fx', this.hurt);
     this.el.append(this.fx, this.top, this.needs, this.stamina, this.cross, this.prompt, this.notifs, this.toastEl, this.missions, this.region, this.carry, this.veh, this.bubbles, this.sleepEl);
     this.touch = h('div#touch');
     this.el.append(this.touch);

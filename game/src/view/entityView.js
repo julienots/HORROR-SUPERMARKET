@@ -131,7 +131,7 @@ export class EntityView {
       if (!e.g.visible) return;
       e.g.position.set(a.x, a.y, a.z);
       e.g.rotation.y = a.yaw || 0;
-      const near = d < 45;
+      const near = d < 24;
       e.full.visible = near; e.imp.visible = !near;
       if (near) {
         const anim = a.kind === 'customer' && a.carrier === 'cart' && a.anim === 'walk' ? 'carry' : a.anim;
@@ -161,7 +161,12 @@ export class EntityView {
     for (const v of g.vehicles.list) {
       vseen.add(v.id);
       let e = this.vehicles.get(v.id);
-      if (!e) { e = { g: vehicleModel(v.type, v.color) }; this.group.add(e.g); this.vehicles.set(v.id, e); }
+      if (!e) {
+        e = { g: vehicleModel(v.type, v.color), lightMats: [] };
+        // matériaux de phares propres à chaque véhicule (allumage indépendant)
+        e.g.traverse((o) => { if (o.isMesh && o.material.emissive && o.material.emissive.r > 0.9 && o.material.emissive.g > 0.85) { o.material = o.material.clone(); e.lightMats.push(o.material); } });
+        this.group.add(e.g); this.vehicles.set(v.id, e);
+      }
       e.g.visible = Math.hypot(v.x - cam.x, v.z - cam.z) < 300;
       if (!e.g.visible) continue;
       e.g.position.set(v.x, v.y, v.z);
@@ -169,7 +174,7 @@ export class EntityView {
       e.g.rotation.order = 'YXZ';
       e.g.rotation.y = v.heading; e.g.rotation.x = -v.pitch; e.g.rotation.z = v.roll;
       for (const w of e.g.userData.wheels || []) w.rotation.x = v.wheelSpin;
-      e.g.traverse((o) => { if (o.userData?.headlight && o.material) o.material.emissiveIntensity = v.lights ? 3 : 0.1; });
+      for (const m of e.lightMats) m.emissiveIntensity = v.lights ? 4 : 0.15;
     }
     for (const [id, e] of this.vehicles) if (!vseen.has(id)) { this.group.remove(e.g); this.vehicles.delete(id); }
     // apparitions

@@ -1,6 +1,33 @@
 // Utilitaires de géométrie : boîtes à UV métriques, fusion par matériau (réduction des appels de dessin).
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+
+/** Réglage global : segments de biseau des boîtes de modèles (0 = arêtes vives, 1 = chanfrein, 2 = arrondi). */
+export const GEO = { bevelSegments: 2 };
+
+/** UV « planaires » métriques selon l'orientation de chaque face (pour toute géométrie). */
+export function planarUV(g, scale = 1) {
+  const p = g.attributes.position, n = g.attributes.normal;
+  const uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    let u, v;
+    if (ax >= ay && ax >= az) { u = p.getZ(i); v = p.getY(i); } else if (ay >= az) { u = p.getX(i); v = p.getZ(i); } else { u = p.getX(i); v = p.getY(i); }
+    uv[i * 2] = u / scale; uv[i * 2 + 1] = v / scale;
+  }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return g;
+}
+const rbCache = new Map();
+/** Boîte biseautée (arêtes adoucies qui accrochent la lumière). */
+export function roundBoxGeo(w, h, d, r, seg = GEO.bevelSegments, uvScale = 1) {
+  const key = `${w.toFixed(3)},${h.toFixed(3)},${d.toFixed(3)},${r.toFixed(3)},${seg},${uvScale}`;
+  if (rbCache.has(key)) return rbCache.get(key).clone();
+  const g = planarUV(new RoundedBoxGeometry(w, h, d, seg, r), uvScale);
+  rbCache.set(key, g);
+  return g.clone();
+}
 
 /** Boîte dont les UV suivent les dimensions (1 unité de texture = `uvScale` mètres). */
 export function boxGeo(w, h, d, uvScale = 1) {
@@ -16,7 +43,11 @@ export function boxGeo(w, h, d, uvScale = 1) {
 
 /** Ajoute une boîte à un groupe. */
 export function B(group, w, h, d, mat, x = 0, y = 0, z = 0, opts = {}) {
-  const m = new THREE.Mesh(boxGeo(w, h, d, opts.uv ?? 1), mat);
+  // les petits objets reçoivent un biseau proportionné ; les grandes surfaces restent nettes
+  const mn = Math.min(w, h, d), mx = Math.max(w, h, d);
+  const r = opts.round ?? Math.min(0.045, mn * 0.18);
+  const geo = GEO.bevelSegments > 0 && opts.round !== 0 && mn >= 0.02 && mx < 4 && r > 0.004 ? roundBoxGeo(w, h, d, r, GEO.bevelSegments, opts.uv ?? 1) : boxGeo(w, h, d, opts.uv ?? 1);
+  const m = new THREE.Mesh(geo, mat);
   m.position.set(x, y, z);
   if (opts.rx) m.rotation.x = opts.rx;
   if (opts.ry) m.rotation.y = opts.ry;
@@ -27,7 +58,7 @@ export function B(group, w, h, d, mat, x = 0, y = 0, z = 0, opts = {}) {
 }
 /** Ajoute un cylindre. */
 export function C(group, rt, rb, h, mat, x = 0, y = 0, z = 0, opts = {}) {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, opts.seg ?? 12, 1, opts.open ?? false), mat);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, opts.seg ?? 16, 1, opts.open ?? false), mat);
   m.position.set(x, y, z);
   if (opts.rx) m.rotation.x = opts.rx;
   if (opts.ry) m.rotation.y = opts.ry;
@@ -37,7 +68,7 @@ export function C(group, rt, rb, h, mat, x = 0, y = 0, z = 0, opts = {}) {
   return m;
 }
 export function S(group, r, mat, x = 0, y = 0, z = 0, opts = {}) {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(r, opts.seg ?? 12, opts.seg2 ?? 8), mat);
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, opts.seg ?? 16, opts.seg2 ?? 12), mat);
   m.position.set(x, y, z);
   if (opts.sx) m.scale.set(opts.sx, opts.sy ?? 1, opts.sz ?? 1);
   m.castShadow = opts.cast ?? true; m.receiveShadow = opts.receive ?? true;
@@ -89,4 +120,27 @@ export function bake(group, { shadows = true } = {}) {
 
 export function disposeGroup(g) {
   g.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+}
+
+/** Fusionne par matériau les maillages enfants directs d'un nœud (conserve la hiérarchie d'articulations). */
+export function mergeChildren(node) {
+  const meshes = node.children.filter((c) => c.isMesh && !c.isInstancedMesh);
+  if (meshes.length < 2) return node;
+  const byMat = new Map();
+  for (const m of meshes) {
+    m.updateMatrix();
+    const g = (m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone());
+    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+    if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    g.applyMatrix4(m.matrix);
+    if (!byMat.has(m.material)) byMat.set(m.material, []);
+    byMat.get(m.material).push(g);
+    node.remove(m);
+  }
+  for (const [mat, geos] of byMat) {
+    const mm = new THREE.Mesh(mergeGeometries(geos, false), mat);
+    mm.castShadow = true;
+    node.add(mm);
+  }
+  return node;
 }

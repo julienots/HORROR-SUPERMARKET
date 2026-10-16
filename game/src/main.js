@@ -10,6 +10,9 @@ import { EntityView, FirstPersonView } from './view/entityView.js';
 import { configureTextures } from './view/textures.js';
 import { propModel } from './view/models.js';
 import { AudioEngine } from './audio/audio.js';
+import { PostFX } from './view/post.js';
+import { ScareFX } from './view/scareFX.js';
+import { GEO } from './view/geo.js';
 import { Input } from './input.js';
 import { HUD, h } from './ui/hud.js';
 import { Panels } from './ui/panels.js';
@@ -84,6 +87,7 @@ class App {
     const pr = Math.min(window.devicePixelRatio || 1, 2) * q.pixelRatio / Math.max(1, (window.devicePixelRatio || 1) / 1.5) * this.settings.renderScale;
     this.renderer.setPixelRatio(clamp(pr, 0.4, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight, false);
+    this.post?.setSize(window.innerWidth, window.innerHeight, this.renderer.getPixelRatio());
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
   }
@@ -110,7 +114,7 @@ class App {
   _teardown() {
     if (this.buildUI.active) this.buildUI.close();
     this.panels.close();
-    if (this.worldView) { this.scene.remove(this.worldView.root); this.scene.clear(); this.scene.add(this.camera); }
+    if (this.worldView) { this.scene.remove(this.worldView.root); this.scene.clear(); this.camera.clear(); this.scene.add(this.camera); this.fpView = null; }
     this.worldView = null; this.entityView = null; this.game = null;
   }
   async newGame(opts) {
@@ -161,6 +165,7 @@ class App {
     this.game = g;
     g.clock.scale = this.settings.timeScale;
     configureTextures(this.renderer, this.settings.quality, g.content.textures);
+    GEO.bevelSegments = this.settings.quality === 'performance' ? 1 : 2;
     this.audio.setCustomSounds(g.content.sounds);
     let t0 = performance.now();
     this.worldView = new WorldView(this.renderer, this.scene, g, this.settings.quality);
@@ -168,6 +173,9 @@ class App {
     t0 = performance.now();
     this.entityView = new EntityView(this.scene, g, this.settings.quality);
     this.timings.entityView = performance.now() - t0;
+    this.post = new PostFX(this.renderer, this.scene, this.camera, this.settings.quality);
+    this.post.setSize(window.innerWidth, window.innerHeight, this.renderer.getPixelRatio());
+    this.scareFX = new ScareFX(this.scene, this, this.settings.quality);
     if (!this.fpView) this.fpView = new FirstPersonView(this.camera, g); else this.fpView.g = g;
     this.worldEditMeshes = new Map();
     for (const e of g.worldEdits) this._addWorldEditMesh(e);
@@ -183,8 +191,8 @@ class App {
     g.bus.on('footstep', (f) => A.play('step', null, { surface: f.surface, run: f.run }));
     g.bus.on('horrorSound', (e) => A.play(e.sound, pos(e), { count: e.count, max: e.sound === 'distantAlarm' ? 600 : 160, ref: e.sound === 'distantAlarm' ? 30 : 2 }));
     g.bus.on('mimicSound', (e) => A.play('voice', pos(e), { voice: e.voice, ref: 6, max: 200 }));
-    g.bus.on('monsterAttack', () => { A.play('hurt'); A.play('stinger'); hud.hurtFlash(); this.shake = 0.6; });
-    g.bus.on('playerHurt', () => hud.hurtFlash());
+    g.bus.on('monsterAttack', () => { A.play('hurt'); A.play('stinger'); hud.hurtFlash(); this.post?.hit(); this.shake = 0.6; });
+    g.bus.on('playerHurt', () => { hud.hurtFlash(); this.post?.hit(); });
     g.bus.on('chaseStart', (e) => { A.play(e.monster.type === 'woods' ? 'roar' : 'screech', pos(e.monster), { ref: 6 }); A.play('stinger'); });
     g.bus.on('monsterRepelled', (e) => A.play('growl', pos(e.monster), { ref: 5 }));
     g.bus.on('hideFound', () => { A.play('stinger'); A.play('screech'); });
@@ -315,7 +323,11 @@ class App {
     this.audio.update(dt, g, this.camera.position, p.vehicle ? p.vehicle.heading + this.camYawOffset : p.yaw);
     this.hud.update(g, dt, this.camera);
     this.panels.update(dt);
-    if (!this.skipRender) this.renderer.render(this.scene, this.camera);
+    this.scareFX.update(dt, g);
+    this.post.update(dt, g, this);
+    this._breathT = (this._breathT || 0) - dt;
+    if (this._breathT <= 0 && (p.stamina < 0.4 || p.needs.stress > 65)) { this._breathT = 2.4; this.audio.play('breath', null, { k: Math.max(1 - p.stamina, p.needs.stress / 100) }); }
+    if (!this.skipRender) { if (this.noPost) this.renderer.render(this.scene, this.camera); else this.post.render(); }
   }
   _do(target, actionId, arg) {
     const r = this.game.interact.do(target, actionId, arg);
@@ -378,7 +390,9 @@ class App {
     if (p.downedT > 0) cam.position.y = p.y + 0.4;
     cam.rotation.order = 'YXZ';
     // la caméra Three regarde vers -z : on la tourne de PI pour que yaw=0 regarde +z
-    cam.rotation.set(p.pitch, p.yaw + Math.PI, p.downedT > 0 ? 0.6 : 0);
+    const t = performance.now() / 1000, st = p.needs.stress / 100;
+    const sway = 0.004 + st * 0.006 + (1 - p.stamina) * 0.01;
+    cam.rotation.set(p.pitch + Math.sin(t * 1.3) * sway, p.yaw + Math.PI + Math.sin(t * 0.7) * sway * 0.6, (p.downedT > 0 ? 0.6 : 0) + Math.sin(t * 0.9) * sway * 0.4);
   }
 }
 

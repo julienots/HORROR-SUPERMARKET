@@ -275,7 +275,7 @@ await scenario('15_performance', async (page) => {
   const r = await page.evaluate(async () => {
     const out = {};
     const g = SE.game, app = SE.app;
-    const at = async (name, x, z, yaw, min) => { const p = g.player; p.x = x; p.z = z; p.y = g.world.groundAt(x, z); p.yaw = yaw; g.clock.minutes = min; for (let i = 0; i < 3; i++) app.frame(0.016, g); const t0 = performance.now(); for (let i = 0; i < 20; i++) app.frame(0.016, g); app.renderer.getContext().finish(); out[name] = { ms: +((performance.now() - t0) / 20).toFixed(1), calls: app.renderer.info.render.calls, tris: app.renderer.info.render.triangles }; };
+    const at = async (name, x, z, yaw, min) => { const p = g.player; p.x = x; p.z = z; p.y = g.world.groundAt(x, z); p.yaw = yaw; g.clock.minutes = min; for (let i = 0; i < 3; i++) app.frame(0.016, g); app.renderer.info.autoReset = false; app.renderer.info.reset(); app.frame(0.016, g); const calls = app.renderer.info.render.calls, tris = app.renderer.info.render.triangles; app.renderer.info.autoReset = true; const t0 = performance.now(); for (let i = 0; i < 20; i++) app.frame(0.016, g); app.renderer.getContext().finish(); out[name] = { ms: +((performance.now() - t0) / 20).toFixed(1), calls, tris }; };
     await at('magasin', 30, -8, 2, 600); await at('parking', 5, 12, 2.3, 600); await at('foret_nuit', -120, 0, 0.5, 1380); await at('maison', -63, 67, 0.4, 540);
     return out;
   });

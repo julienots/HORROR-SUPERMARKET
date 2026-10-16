@@ -1,7 +1,7 @@
 // Construction du rendu d'un bâtiment à partir de sa description (sim/structure.js).
 import * as THREE from 'three';
 import { boxGeo, B, bake, disposeGroup } from './geo.js';
-import { pbr, solid } from './textures.js';
+import { pbr, solid, labelTexture } from './textures.js';
 import { fixtureModel, MATS } from './models.js';
 import { STYLES, WALL_TYPES } from '../sim/structure.js';
 import { FIXTURES } from '../sim/catalog.js';
@@ -121,7 +121,7 @@ export function buildStructure(s, opts = {}) {
   // poteaux d'angle pour fermer les jonctions
   const corners = new Set();
   for (const [key] of s.walls) { const e = s.edgeSegment(key); corners.add(`${e.x0 - s.ox},${e.z0 - s.oz}`); corners.add(`${e.x1 - s.ox},${e.z1 - s.oz}`); }
-  for (const c of corners) { const [x, z] = c.split(',').map(Number); const m = new THREE.Mesh(boxGeo(T, H, T), ext); m.position.set(x, H / 2, z); m.castShadow = true; stat.add(m); }
+  for (const c of corners) { const [x, z] = c.split(',').map(Number); const m = new THREE.Mesh(boxGeo(T * 0.9, H - 0.01, T * 0.9), ext); m.position.set(x, H / 2, z); m.castShadow = true; stat.add(m); }
   // ouvertures
   for (const [key, w] of s.walls) {
     if (w.type === 'wall') continue;
@@ -190,6 +190,50 @@ export function buildStructure(s, opts = {}) {
     }
   }
 
+  // ---- détails d'architecture : soubassement, corniche, gouttière (sur toutes les arêtes extérieures)
+  const plinthMat = s.abandoned ? pbr('concrete_dirty') : pbr('concrete', { color: '#8a8780' });
+  const corniceMat = solid(STYLES[s.style]?.trim || '#333', 0.55, 0.3);
+  for (const [key, w] of s.walls) {
+    const [[ai, aj], [bi, bj]] = s.edgeSides(key);
+    const aIn = indoor(ai, aj), bIn = indoor(bi, bj);
+    if (aIn === bIn) continue;
+    const seg = segOf(key);
+    const out = aIn ? 1 : -1; // côté extérieur
+    const isDoor = WALL_TYPES[w.type]?.door;
+    if (!isDoor) {
+      const pl = new THREE.Mesh(seg.horizontal ? boxGeo(1.0, 0.42, 0.08) : boxGeo(0.08, 0.42, 1.0), plinthMat);
+      pl.position.set(seg.cx + (seg.horizontal ? 0 : out * (T / 2 + 0.04)), 0.21 - 0.12, seg.cz + (seg.horizontal ? out * (T / 2 + 0.04) : 0));
+      stat.add(pl);
+    }
+    if (s.roof && s.roofType === 'gable') {
+      const gu = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.02, 8), corniceMat);
+      gu.rotation.z = Math.PI / 2; if (!seg.horizontal) gu.rotation.set(Math.PI / 2, 0, 0);
+      gu.position.set(seg.cx + (seg.horizontal ? 0 : out * (T / 2 + 0.25)), H - 0.02, seg.cz + (seg.horizontal ? out * (T / 2 + 0.25) : 0));
+      stat.add(gu);
+    }
+  }
+  // ---- magasin : bandeau d'enseigne et auvent au-dessus de l'entrée
+  if (s.kind === 'store') {
+    const ents = [...s.walls.entries()].filter(([, w]) => w.type === 'autodoor' || w.type === 'door').filter(([k]) => { const [[ai, aj], [bi, bj]] = s.edgeSides(k); return indoor(ai, aj) !== indoor(bi, bj); });
+    if (ents.length) {
+      const segs = ents.map(([k]) => ({ seg: segOf(k), k }));
+      const f = segs[0].seg;
+      const [[ai, aj]] = s.edgeSides(segs[0].k);
+      const out = indoor(ai, aj) ? 1 : -1;
+      const cx = segs.reduce((a, x) => a + x.seg.cx, 0) / segs.length, cz = segs.reduce((a, x) => a + x.seg.cz, 0) / segs.length;
+      const signTex = labelTexture('SuperEssence.', '#101010', '#ffcc22', 1024, 160, 'bold 120px sans-serif');
+      const sign = new THREE.Mesh(f.horizontal ? new THREE.BoxGeometry(9, 1.1, 0.25) : new THREE.BoxGeometry(0.25, 1.1, 9), [0, 1, 2, 3, 4, 5].map((i) => (f.horizontal ? (i === 4 || i === 5) : (i === 0 || i === 1)) ? new THREE.MeshStandardMaterial({ map: signTex, emissive: new THREE.Color('#ffffff'), emissiveMap: signTex, emissiveIntensity: 0.9, roughness: 0.4 }) : solid('#101010', 0.4, 0.3)));
+      sign.position.set(cx + (f.horizontal ? 0 : out * 0.3), H - 0.55, cz + (f.horizontal ? out * 0.3 : 0));
+      sign.userData.keep = true; root.add(sign);
+      dyn.sign = sign;
+      const can = new THREE.Mesh(f.horizontal ? boxGeo(6, 0.18, 2.4) : boxGeo(2.4, 0.18, 6), solid('#2a2c30', 0.4, 0.6));
+      can.position.set(cx + (f.horizontal ? 0 : out * 1.25), 2.75, cz + (f.horizontal ? out * 1.25 : 0)); can.castShadow = true; stat.add(can);
+      const canLight = new THREE.Mesh(f.horizontal ? boxGeo(5.6, 0.02, 2.0) : boxGeo(2.0, 0.02, 5.6), dyn.canMat = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: new THREE.Color('#fff4e4'), emissiveIntensity: 0.9 }));
+      canLight.position.set(can.position.x, 2.65, can.position.z); stat.add(canLight);
+      for (const sgn of [-1, 1]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 2.7, 10), solid('#2a2c30', 0.4, 0.6)); post.position.set(can.position.x + (f.horizontal ? sgn * 2.8 : out * 1.0), 1.35, can.position.z + (f.horizontal ? out * 1.0 : sgn * 2.8)); stat.add(post); }
+    }
+  }
+
   // ---- toit (groupe séparé : masqué en mode construction)
   const roofG0 = new THREE.Group(); root.add(roofG0); dyn.roof = roofG0;
   if (s.roof) {
@@ -243,8 +287,8 @@ export function buildStructure(s, opts = {}) {
         const [[ai, aj], [bi, bj]] = s.edgeSides(key);
         if (indoor(ai, aj) === indoor(bi, bj)) continue;
         const seg = segOf(key);
-        const m = new THREE.Mesh(seg.horizontal ? boxGeo(1.02, 0.5, T) : boxGeo(T, 0.5, 1.02), trim);
-        m.position.set(seg.cx, H + 0.25, seg.cz); stat.add(m);
+        const m = new THREE.Mesh(seg.horizontal ? boxGeo(1.0 + T + 0.08, 0.55, T + 0.08) : boxGeo(T + 0.08, 0.55, 1.0 + T + 0.08), trim);
+        m.position.set(seg.cx, H + 0.27, seg.cz); stat.add(m);
       }
     }
   }
@@ -323,6 +367,8 @@ export function updateStructureDyn(root, s, dt, time) {
   let k = on ? 1 : 0;
   if (fx?.state === 'flicker') k = Math.random() < 0.35 ? 0.05 : 1;
   dyn.lightMat.emissiveIntensity = 2.4 * k;
+  if (dyn.canMat) dyn.canMat.emissiveIntensity = 0.9 * k;
+  if (dyn.sign) for (const m of [].concat(dyn.sign.material)) if (m.emissiveMap) m.emissiveIntensity = 0.9 * (s.powered ? 1 : 0);
   dyn.lightOn = k > 0.5;
   for (const sc of dyn.screens) if (sc.material?.emissive) sc.material.emissiveIntensity = s.powered ? (sc.userData.tvScreen ? 0.6 + Math.sin(time * 7) * 0.2 : 0.9) : 0;
 }

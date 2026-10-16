@@ -222,23 +222,47 @@ export class WorldView {
 
   // ------------------------------------------------------------------ forêt
   _treeGeos() {
-    const pineTrunk = new THREE.CylinderGeometry(0.18, 0.3, 10, 7); pineTrunk.translate(0, 5, 0);
-    const cones = [];
-    for (let k = 0; k < 5; k++) { const c = new THREE.ConeGeometry(2.6 - k * 0.45, 3.6, 8, 1, false); c.translate(0, 3.6 + k * 1.9, 0); cones.push(c); }
-    const pineFol = mergeGeometries(cones);
-    const pineFar = new THREE.ConeGeometry(2.6, 10.5, 6); pineFar.translate(0, 7, 0);
-    const birchTrunk = new THREE.CylinderGeometry(0.12, 0.18, 9, 6); birchTrunk.translate(0, 4.5, 0);
-    const blobs = []; for (let k = 0; k < 4; k++) { const b = new THREE.IcosahedronGeometry(1.7 - k * 0.15, 1); b.translate((k % 2 ? 0.6 : -0.5), 5.5 + k * 1.1, (k > 1 ? 0.5 : -0.4)); blobs.push(b); }
-    const birchFol = mergeGeometries(blobs);
-    const deadTrunk = (() => { const parts = [new THREE.CylinderGeometry(0.14, 0.26, 8, 6).translate(0, 4, 0)]; for (let k = 0; k < 5; k++) { const b = new THREE.CylinderGeometry(0.03, 0.08, 2.4, 4); b.translate(0, 1.2, 0); b.rotateZ(0.9 - (k % 2) * 1.8); b.rotateY(k * 1.3); b.translate(0, 3.5 + k * 0.8, 0); parts.push(b); } return mergeGeometries(parts); })();
+    const rnd = new RNG(42);
+    const colorize = (g, fn) => { const p = g.attributes.position; const c = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const [r, gg, b] = fn(p.getX(i), p.getY(i), p.getZ(i)); c[i * 3] = r; c[i * 3 + 1] = gg; c[i * 3 + 2] = b; } g.setAttribute('color', new THREE.BufferAttribute(c, 3)); return g; };
+    const noisy = (g, amp, fn) => { const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const k = fn ? fn(x, y, z) : 1; const n = Math.sin(x * 7.1 + y * 3.3) * Math.cos(z * 6.7 - y * 2.1) * amp * k; p.setXYZ(i, x + x * n, y, z + z * n); } return g; };
+    const trunk = (h, r0, r1, seg = 9) => { const g = new THREE.CylinderGeometry(r1, r0, h, seg, 6); g.translate(0, h / 2, 0); const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); const flare = y < 0.8 ? 1 + (0.8 - y) * 0.6 : 1; const n = 1 + Math.sin(p.getX(i) * 40 + y * 3) * 0.06; p.setX(i, p.getX(i) * flare * n); p.setZ(i, p.getZ(i) * flare * n); } g.computeVertexNormals(); return g; };
+    // sapin : 8 étages de branches irrégulières qui retombent, plus sombres vers le tronc
+    const layers = [];
+    for (let k = 0; k < 8; k++) {
+      const R = 2.9 - k * 0.33, H = 2.3 - k * 0.1, y0 = 2.2 + k * 1.15;
+      const c = new THREE.ConeGeometry(R, H, 11, 3, true);
+      const p = c.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+        const rr = Math.hypot(x, z) / R;
+        const ang = Math.atan2(z, x);
+        const jag = 1 + Math.sin(ang * 11 + k * 1.7) * 0.18 * rr + rnd.range(-0.08, 0.08) * rr;
+        p.setXYZ(i, x * jag, y - rr * rr * 0.55, z * jag); // pointes tombantes
+      }
+      c.rotateY(k * 0.7); c.translate(0, y0, 0);
+      layers.push(c);
+    }
+    const tip = new THREE.ConeGeometry(0.5, 1.6, 7); tip.translate(0, 2.2 + 8 * 1.15 + 0.3, 0); layers.push(tip);
+    const pineFol = mergeGeometries(layers.map((l) => l.index ? l.toNonIndexed() : l));
+    pineFol.computeVertexNormals();
+    colorize(pineFol, (x, y, z) => { const rr = Math.min(1, Math.hypot(x, z) / 2.6); const k = 0.35 + rr * 0.65; return [0.035 * k + 0.004, 0.062 * k + 0.006, 0.03 * k + 0.004]; });
+    const pineTrunk = trunk(11, 0.32, 0.12);
+    const pineFar = new THREE.ConeGeometry(2.7, 11, 7); pineFar.translate(0, 7.3, 0); noisy(pineFar, 0.15);
+    const birchTrunk = trunk(9.5, 0.2, 0.09, 8);
+    const blobs = [];
+    for (let k = 0; k < 26; k++) { const b = new THREE.IcosahedronGeometry(0.45 + rnd.range(0, 0.45), 1); noisy(b, 0.45); const a = rnd.range(0, 6.28), rr = rnd.range(0.4, 1.9), y = 4.6 + rnd.range(0, 4.6); b.scale(1, 0.75, 1); b.translate(Math.cos(a) * rr * (1 - (y - 4.6) / 7), y, Math.sin(a) * rr * (1 - (y - 4.6) / 7)); blobs.push(b); }
+    const birchFol = mergeGeometries(blobs.map((b) => b.index ? b.toNonIndexed() : b));
+    birchFol.computeVertexNormals();
+    colorize(birchFol, (x, y) => { const k = 0.55 + Math.min(0.45, (y - 5) / 9); return [0.09 * k, 0.15 * k, 0.035 * k]; });
+    const deadTrunk = (() => { const parts = [trunk(8.5, 0.28, 0.06)]; for (let k = 0; k < 9; k++) { const b = new THREE.CylinderGeometry(0.02, 0.07, 2.2 + rnd.range(0, 1.2), 5); b.translate(0, 1.2, 0); b.rotateZ(0.7 + rnd.range(0, 0.6)); b.rotateY(k * 2.4); b.translate(0, 2.6 + k * 0.6, 0); parts.push(b.toNonIndexed()); } return mergeGeometries(parts.map((q) => q.index ? q.toNonIndexed() : q)); })();
     return { pineTrunk, pineFol, pineFar, birchTrunk, birchFol, deadTrunk };
   }
   _trees() {
     const G = this._treeGeos();
     const bark = pbr('bark'); const birchBark = pbr('bark', { color: '#e8e4dc' });
-    const needles = addWind(new THREE.MeshStandardMaterial({ color: '#2c3f26', roughness: 0.92, flatShading: true }), 1);
-    const leaves = addWind(new THREE.MeshStandardMaterial({ color: '#58702e', roughness: 0.9, flatShading: true }), 1.5);
-    const far = new THREE.MeshStandardMaterial({ color: '#28391f', roughness: 1, flatShading: true });
+    const needles = addWind(new THREE.MeshStandardMaterial({ color: '#ffffff', vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }), 1);
+    const leaves = addWind(new THREE.MeshStandardMaterial({ color: '#ffffff', vertexColors: true, roughness: 0.9, flatShading: true }), 1.5);
+    const far = new THREE.MeshStandardMaterial({ color: '#16220f', roughness: 1, flatShading: true });
     const CELL = 100;
     const cells = new Map();
     for (const tr of this.g.world.trees) {
@@ -405,11 +429,11 @@ export class WorldView {
     const storm = wx.state === 'storm' ? 1 : 0;
     const cloudDim = 1 - wx.cloud * 0.55 - storm * 0.25;
     const moonDir = new THREE.Vector3(-Math.cos(ang) * 0.6, Math.max(0.25, -Math.sin(ang)), 0.5).normalize();
-    const moonK = wx.darkNight ? 0.02 : 0.12 * (1 - wx.cloud * 0.8);
+    const moonK = wx.darkNight ? 0.01 : 0.07 * (1 - wx.cloud * 0.8);
     const lit = day > 0.02 ? sunDir : moonDir;
     this.sun.position.set(cam.x + lit.x * 150, cam.y + lit.y * 150, cam.z + lit.z * 150);
     this.sun.target.position.set(cam.x, cam.y, cam.z);
-    this.sun.intensity = day > 0.02 ? 3.2 * day * cloudDim : moonK;
+    this.sun.intensity = day > 0.02 ? 3.8 * day * cloudDim : moonK;
     this.sun.color.set(day > 0.02 ? (day < 0.5 ? '#ffb070' : '#fff2dc') : '#9fb4e0');
     // stabilisation de l'ombre (évite le scintillement)
     const snap = (this.q.shadowSize * 2) / this.q.shadowMap;
@@ -423,8 +447,8 @@ export class WorldView {
     // lumière d'ambiance (intérieur éclairé ou extérieur)
     const inside = g.world.structureAt(cam.x, cam.z);
     const insideLit = inside && inside.isIndoor(cam.x, cam.z) && inside.powered && inside.lightsOn && !inside._lightFx;
-    const nightAmb = wx.darkNight ? 0.015 : 0.05;
-    let hemiI = (0.15 + day * 0.65) * cloudDim + (1 - day) * nightAmb;
+    const nightAmb = wx.darkNight ? 0.006 : 0.022;
+    let hemiI = (0.12 + day * 0.38) * cloudDim + (1 - day) * nightAmb;
     if (insideLit) hemiI = Math.max(hemiI * 0.5, 0.32);
     else if (inside && inside.isIndoor(cam.x, cam.z)) hemiI *= 0.45;
     hemiI += wx.lightning * 2.5;
@@ -433,12 +457,12 @@ export class WorldView {
     this.renderer.toneMappingExposure = 0.85 + (1 - day) * 0.35;
     // à l'intérieur, les réflexions du ciel sont fortement atténuées
     this._indoorK = (this._indoorK ?? 0) + (((inside && inside.isIndoor(cam.x, cam.z)) ? 1 : 0) - (this._indoorK ?? 0)) * Math.min(1, dt * 8);
-    if (this.envRT) this.scene.environmentIntensity = (0.15 + day * 0.85) * (1 - this._indoorK * 0.7);
+    if (this.envRT) this.scene.environmentIntensity = (0.1 + day * 0.55) * (1 - this._indoorK * 0.7);
     // brouillard
-    const fogCol = new THREE.Color().setHSL(0.58, 0.15, 0.08 + day * 0.55 * cloudDim);
+    const fogCol = new THREE.Color().setHSL(0.58, 0.18 + (1 - day) * 0.06, 0.025 + day * 0.5 * cloudDim);
     if (wx.lightning > 0.3) fogCol.setRGB(0.6, 0.65, 0.75);
     this.scene.fog.color.copy(fogCol);
-    this.scene.fog.density = 0.0018 + wx.fog * 0.045 + (1 - day) * 0.004 + wx.rain * 0.004 + (g.horror.majorEvent ? 0.02 : 0);
+    this.scene.fog.density = 0.0011 + wx.fog * 0.045 + (1 - day) * 0.012 + wx.rain * 0.004 + (g.horror.majorEvent ? 0.025 : 0);
     if (inside && inside.isIndoor(cam.x, cam.z)) this.scene.fog.density *= 0.04;
     this.renderer.setClearColor(fogCol);
     // carte d'environnement (réflexions PBR) recalculée périodiquement
@@ -489,7 +513,7 @@ export class WorldView {
         cands.push({ x: l.x, y: l.y, z: l.z, i: l.def.ceiling ? 5 : 3, d: l.def.ceiling ? 10 : 6, c: '#ffeedd', indoor: true });
       }
     }
-    if (day < 0.6 && g.power.grid) for (const p of g.world.streetLights) cands.push({ x: p.x + 1.1, y: p.y + 5.7, z: p.z, i: 40, d: 26, c: '#ffcf8a' });
+    if (day < 0.6 && g.power.grid) for (const p of g.world.streetLights) cands.push({ x: p.x + 1.1, y: p.y + 5.7, z: p.z, i: 40 * (p._flickerK ?? 1), d: 26, c: '#ffcf8a' });
     for (const f of g.monsters.flares) cands.push({ x: f.x, y: 1.2, z: f.z, i: 60 + Math.random() * 20, d: 30, c: '#ff3a20' });
     // auvent de la station
     cands.forEach((c) => { c.dist = Math.hypot(c.x - cam.x, c.y - cam.y, c.z - cam.z); });

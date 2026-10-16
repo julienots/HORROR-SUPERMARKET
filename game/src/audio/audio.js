@@ -216,6 +216,11 @@ export class AudioEngine {
       case 'heartbeat': this._burst(this.sfx, { dur: 0.1, freq: 60, peak: 0.8, buf: this.brownBuf, type: 'lowpass' }); this._burst(this.sfx, { dur: 0.1, freq: 55, peak: 0.6, buf: this.brownBuf, type: 'lowpass', when: 0.22 }); break;
       case 'stinger': this._tone(this.sfx, { freq: 70, dur: 2.2, type: 'sawtooth', peak: 0.25, attack: 0.02 }); this._tone(this.sfx, { freq: 1480, dur: 1.4, type: 'triangle', peak: 0.06, slide: -300 }); this._burst(this.sfx, { dur: 1.6, freq: 2500, q: 3, peak: 0.15 }); break;
       case 'flare': this._burst(dest, { dur: 0.3, freq: 600, peak: 0.6 }); this._burst(dest, { dur: 4, freq: 3000, q: 1, peak: 0.1, attack: 0.3 }); break;
+      case 'twig': this._burst(dest, { dur: 0.04, freq: 2400, q: 2, peak: 0.9 }); this._burst(dest, { dur: 0.06, freq: 1400, q: 3, peak: 0.6, when: 0.05 }); this._burst(dest, { dur: 0.15, freq: 500, peak: 0.25, when: 0.08, buf: this.brownBuf, type: 'lowpass' }); break;
+      case 'owl': for (const [k, w] of [[0, 0.25], [0.45, 0.18], [0.75, 0.5]]) this._tone(dest, { freq: 380 + Math.random() * 20, dur: w, peak: 0.25, slide: -40, when: k, attack: 0.05 }); break;
+      case 'howl': { const f0 = 300 + Math.random() * 80; this._tone(dest, { freq: f0, dur: 2.4, type: 'triangle', peak: 0.22, slide: f0 * 0.6, attack: 0.4 }); this._tone(dest, { freq: f0 * 1.5, dur: 2.0, type: 'sine', peak: 0.08, slide: f0 * 0.4, attack: 0.5, when: 0.2 }); this._burst(dest, { dur: 2.4, freq: f0 * 2, q: 6, peak: 0.05, attack: 0.4 }); break; }
+      case 'distantScream': this._tone(dest, { freq: 700, dur: 1.2, type: 'sawtooth', peak: 0.12, slide: -380, attack: 0.03 }); this._burst(dest, { dur: 1.2, freq: 1500, q: 4, peak: 0.12 }); break;
+      case 'breath': for (let k = 0; k < 2; k++) this._burst(this.sfx, { dur: 0.7, freq: 900, q: 0.7, peak: 0.06 + (opts.k || 0) * 0.1, attack: 0.25, when: k * 1.1, buf: this.pinkBuf }); break;
       case 'ui': this._tone(this.sfx, { freq: 1200, dur: 0.04, peak: 0.05 }); break;
       default: break;
     }

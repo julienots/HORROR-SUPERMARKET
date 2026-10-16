@@ -72,6 +72,18 @@ Rien n'est déclaré « terminé » sans test ; les limites sont listées sans d
 - SUPERESSENCE STUDIO : les 13 entrées demandées ; créateur de monstres avec aperçu 3D et test en jeu, éditeur d'événements avec test immédiat, éditeur de monde, galerie, options (qualité, échelle de rendu, ombres, sensibilité, disposition tactile éditable, vitesse du temps, volumes).
 - Mods : format JSON documenté et versionné (produits, meubles/décorations, créatures, événements, scénarios, difficulté, règles, plans de magasin, objets, textures, sons), validation, dépendances, conflits, ordre de chargement, import/export, 5 exemples.
 
+
+## 2 bis. Version 0.2.0 — réalisme et ambiance
+- **Formes adoucies** : toutes les boîtes des meubles, équipements et accessoires sont biseautées (2 segments en Équilibré/Qualité, chanfrein en Performance), cylindres et sphères plus lisses.
+- **Véhicules carrossés** : profils latéraux extrudés et arrondis (capot, habitacle vitré, coffre), pneus toriques, jantes à 5 branches, calandre, rétroviseurs, plaques, peinture vernie (clearcoat) ; phares indépendants par véhicule.
+- **Personnages organiques** : torse et bassin modelés, membres en gélules effilées, mains, cou, visage (nez, oreilles, yeux, sourcils, bouche), cheveux, chaussures ; fusion par articulation et niveau de détail intermédiaire figé pour limiter les appels de dessin.
+- **Créatures anatomiques** : côtes, colonne vertébrale, doigts démesurés, dents, mâchoire décrochée animée de l'Imitateur, crâne de cervidé et mousse de la Chose des bois, peau texturée (plis, rugosité), yeux luisants.
+- **Forêt** : sapins à 8 étages irréguliers et tombants avec intérieur plus sombre (occlusion simulée), troncs évasés et noueux, bouleaux à feuillage fragmenté, arbres morts plus ramifiés.
+- **Architecture** : soubassement béton, gouttières, acrotère, façade brique du magasin avec enseigne lumineuse « SuperEssence. » et auvent éclairé.
+- **Post-traitement** : halo des lumières la nuit (bloom), étalonnage (ombres froides la nuit, contraste, désaturation sous stress), vignette qui bat au rythme cardiaque, grain de pellicule, aberration chromatique quand une créature approche, flash rouge à l'impact, lignes de balayage sur les caméras. Mode Performance : sans bloom.
+- **Lumière et brouillard** : nuits beaucoup plus noires (lune faible, nuits sans lune), brouillard nocturne dense, faisceau volumétrique de la lampe torche, cônes de lumière des lampadaires et des phares, brume rasante la nuit, intérieurs moins surexposés.
+- **Peur** : yeux qui brillent en lisière de forêt (disparaissent sous la lampe), silhouettes en vision périphérique qui s'évanouissent quand on les regarde, pas qui s'approchent derrière le joueur, brindilles qui craquent, hiboux, hurlements et cris lointains, chuchotements sous fort stress, respiration haletante, lampadaires qui grésillent et clignotent, balancement de caméra lié au stress et à l'essoufflement.
+
 ## 3. Tests réalisés
 
 ### Tests unitaires (Node, `npm test`) — 17/17 réussis
