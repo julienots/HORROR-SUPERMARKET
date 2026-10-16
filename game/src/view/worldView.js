@@ -134,7 +134,7 @@ export class WorldView {
         for (const st of t.sites) { const dx = Math.max(st.x0 - x, 0, x - st.x1), dz = Math.max(st.z0 - z, 0, z - st.z1); site = Math.max(site, 1 - clamp(Math.hypot(dx, dz) / 5, 0, 1)); }
         const [ci, cj] = nav.cellOf(x, z);
         const dens = nav.inBounds(ci, cj) ? nav.cost[nav.idx(ci, cj)] : 0;
-        splat[i * 2] = clamp(road * 1.4 + site * 0.55, 0, 1);
+        splat[i * 2] = clamp((road - 0.25) * 1.6 + site * 0.18, 0, 1);
         splat[i * 2 + 1] = clamp(dens / 14, 0, 1);
       }
       geo.setAttribute('splat', new THREE.BufferAttribute(splat, 2));
@@ -425,7 +425,7 @@ export class WorldView {
     const insideLit = inside && inside.isIndoor(cam.x, cam.z) && inside.powered && inside.lightsOn && !inside._lightFx;
     const nightAmb = wx.darkNight ? 0.015 : 0.05;
     let hemiI = (0.15 + day * 0.65) * cloudDim + (1 - day) * nightAmb;
-    if (insideLit) hemiI = Math.max(hemiI, 0.95);
+    if (insideLit) hemiI = Math.max(hemiI * 0.5, 0.32);
     else if (inside && inside.isIndoor(cam.x, cam.z)) hemiI *= 0.45;
     hemiI += wx.lightning * 2.5;
     this.hemi.intensity = hemiI;
@@ -483,7 +483,7 @@ export class WorldView {
       for (const l of dyn.lamps) {
         if (l.flood) { if (day < 0.6) cands.push({ x: l.x, y: l.y, z: l.z, i: 30, d: 30, c: '#fff4e0' }); continue; }
         if (!dyn.lightOn || l.f?.off) continue;
-        cands.push({ x: l.x, y: l.y, z: l.z, i: l.def.ceiling ? 9 : 5, d: l.def.ceiling ? 11 : 7, c: '#ffeedd', indoor: true });
+        cands.push({ x: l.x, y: l.y, z: l.z, i: l.def.ceiling ? 5 : 3, d: l.def.ceiling ? 10 : 6, c: '#ffeedd', indoor: true });
       }
     }
     if (day < 0.6 && g.power.grid) for (const p of g.world.streetLights) cands.push({ x: p.x + 1.1, y: p.y + 5.7, z: p.z, i: 40, d: 26, c: '#ffcf8a' });

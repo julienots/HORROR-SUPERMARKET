@@ -43,7 +43,7 @@ export class BuildSystem {
     this.undoStack = [];
   }
   _snapshot(label, cost) {
-    this.undoStack.push({ label, cost, s: this.structure.serialize(), cases: JSON.stringify(this.g.store.cases) });
+    this.undoStack.push({ label, cost, s: JSON.parse(JSON.stringify(this.structure.serialize())), cases: JSON.stringify(this.g.store.cases) });
     if (this.undoStack.length > 40) this.undoStack.shift();
   }
   undo() {

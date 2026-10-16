@@ -71,8 +71,9 @@ export class HUD {
   /** Construit les boutons tactiles selon la disposition enregistrée. */
   buildTouch(layout, isTouch) {
     this.touch.innerHTML = '';
-    this.tbtns = {};
+    this.tbtns = null;
     if (!isTouch) return;
+    this.tbtns = {};
     this.stickBase = h('div#stickBase'); this.stickKnob = h('div#stickKnob');
     this.stickBase.style.display = this.stickKnob.style.display = 'none';
     this.touch.append(this.stickBase, this.stickKnob);

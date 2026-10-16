@@ -228,7 +228,7 @@ export class FirstPersonView {
     const torch = new THREE.Group();
     const body = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.2, 10), solid('#202020', 0.4, 0.6)); body.rotation.x = Math.PI / 2; torch.add(body);
     const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.03, 12), new THREE.MeshStandardMaterial({ color: '#fff', emissive: new THREE.Color('#fff4d8'), emissiveIntensity: 2 })); lens.rotation.x = Math.PI / 2; lens.position.z = -0.11; torch.add(lens);
-    torch.position.set(0.28, -0.3, -0.5); this.torch = torch; this.root.add(torch);
+    torch.position.set(0.3, -0.34, -0.55); torch.rotation.set(0.08, -0.06, 0); this.torch = torch; this.root.add(torch);
     this.bob = 0;
   }
   update(dt) {

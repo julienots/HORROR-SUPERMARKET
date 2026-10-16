@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node --test tests/unit/",
+    "test": "node --test tests/unit/*.test.mjs",
     "e2e": "node tests/e2e/run.mjs"
   },
   "keywords": [],
