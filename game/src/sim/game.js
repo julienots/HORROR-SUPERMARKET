@@ -314,7 +314,7 @@ export class Game {
   _sleepTick() {
     const p = this.player;
     if (this.clock.minutes >= this.sleepInfo.until && p.needs.energy > 60) this.wake(null);
-    else if (p.needs.energy >= 100 && this.clock.hour > 5.5 && this.clock.hour < 12) this.wake(null);
+    else if (p.needs.energy >= 100 && this.clock.hour >= 6 && this.clock.hour < 12) this.wake(null);
   }
   wake(reason) {
     const p = this.player;

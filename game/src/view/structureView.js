@@ -190,7 +190,8 @@ export function buildStructure(s, opts = {}) {
     }
   }
 
-  // ---- toit
+  // ---- toit (groupe séparé : masqué en mode construction)
+  const roofG0 = new THREE.Group(); root.add(roofG0); dyn.roof = roofG0;
   if (s.roof) {
     const roofRects = greedyRects(s.w, s.d, (i, j) => (s.getFloor(i, j) === 1 ? 1 : null));
     const roofMat = pbr(STYLES[s.style]?.roof || 'metal_dark', { repeat: [1, 1] });
@@ -225,16 +226,16 @@ export function buildStructure(s, opts = {}) {
         roofG.add(m);
       }
       roofG.position.set(i0 + wR / 2, H, j0 + dR / 2);
-      stat.add(roofG);
+      roofG0.add(roofG);
     } else {
       for (const r of roofRects) {
         const m = new THREE.Mesh(boxGeo(r.w + T, 0.3, r.d + T, 3), roofMat);
-        m.position.set(r.i + r.w / 2, H + 0.15, r.j + r.d / 2); m.castShadow = true; m.receiveShadow = true; stat.add(m);
+        m.position.set(r.i + r.w / 2, H + 0.15, r.j + r.d / 2); m.castShadow = true; m.receiveShadow = true; roofG0.add(m);
       }
     }
     for (const r of roofRects) {
       const c = new THREE.Mesh(boxGeo(r.w, 0.02, r.d, 1), ceilMat);
-      c.position.set(r.i + r.w / 2, H - 0.01, r.j + r.d / 2); c.receiveShadow = true; stat.add(c);
+      c.position.set(r.i + r.w / 2, H - 0.01, r.j + r.d / 2); c.receiveShadow = true; roofG0.add(c);
     }
     if (s.roofType !== 'gable') {
       // acrotère
@@ -279,6 +280,9 @@ export function buildStructure(s, opts = {}) {
     dyn.lamps.push({ flood: true, mesh: head, x: s.ox + x, z: s.oz + z, y: s.floorY + 4 });
   }
   bake(stat);
+  bake(roofG0);
+  // tous les équipements fusionnés par matériau (les matériaux d'écran et d'éclairage restent partagés, donc pilotables)
+  bake(fixGroup);
   root.userData.dyn = dyn;
   root.userData.version = s.version;
   return root;
@@ -290,6 +294,7 @@ export function disposeStructure(g) { disposeGroup(g); }
 export function updateStructureDyn(root, s, dt, time) {
   const dyn = root.userData.dyn;
   if (!dyn) return;
+  if (dyn.roof) dyn.roof.visible = !s._hideRoof;
   for (const d of dyn.doors) {
     const w = d.w;
     const target = w.destroyed ? 1 : w.open ? 1 : 0;

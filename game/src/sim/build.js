@@ -29,6 +29,7 @@ export class BuildSystem {
     if (kind === 'house' && FIXTURES[this.fixtureType]?.where === 'store') this.fixtureType = 'sofa';
     if (kind === 'store' && FIXTURES[this.fixtureType]?.where === 'house') this.fixtureType = 'gondola';
     this.g.paused = true;
+    s._hideRoof = true;
     this.g.bus.emit('build', { on: true, structure: s });
     return { ok: true };
   }
@@ -37,6 +38,7 @@ export class BuildSystem {
     if (this.moving) this.cancelMove();
     this.active = false;
     this.g.paused = false;
+    if (this.structure) this.structure._hideRoof = false;
     this._ensurePlayerFree();
     this.g.checkout.prune();
     this.g.bus.emit('build', { on: false, structure: this.structure });

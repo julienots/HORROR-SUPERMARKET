@@ -92,7 +92,7 @@ th { color: var(--dim); font-weight: 600; font-size: 12px; position: sticky; top
 .slot { border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: #16181c; }
 .bar { height: 6px; border-radius: 3px; background: #2a2d33; overflow: hidden; margin-top: 4px; } .bar i { display: block; height: 100%; background: var(--good); }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 6px; border: 1px solid #0006; }
-.item { display: flex; gap: 8px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #16181c; }
+.item { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #16181c; }
 .scanItem { cursor: pointer; } .scanItem.done { opacity: 0.45; text-decoration: line-through; }
 
 /* ---------------- menu principal / studio */

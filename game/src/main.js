@@ -154,7 +154,6 @@ class App {
   }
   saveGame(slot) {
     if (!this.game) return { ok: false, error: 'Aucune partie' };
-    if (this.game.player.sleeping) this.game.wake(null);
     const obj = serializeGame(this.game, { mods: this.activeMods || [] });
     return this.saves.write(slot, obj);
   }
@@ -285,7 +284,7 @@ class App {
       this.worldView.update(dt, this.camera);
       this.entityView.update(dt, this.camera);
       this.fpView.root.visible = false;
-      this.renderer.render(this.scene, this.camera);
+      if (!this.skipRender) this.renderer.render(this.scene, this.camera);
       return;
     }
     const p = g.player;
@@ -316,7 +315,7 @@ class App {
     this.audio.update(dt, g, this.camera.position, p.vehicle ? p.vehicle.heading + this.camYawOffset : p.yaw);
     this.hud.update(g, dt, this.camera);
     this.panels.update(dt);
-    this.renderer.render(this.scene, this.camera);
+    if (!this.skipRender) this.renderer.render(this.scene, this.camera);
   }
   _do(target, actionId, arg) {
     const r = this.game.interact.do(target, actionId, arg);

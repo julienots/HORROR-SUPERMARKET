@@ -5,3 +5,4 @@ android/build/
 android/app/build/
 android/local.properties
 *.log
+tests/e2e/out/

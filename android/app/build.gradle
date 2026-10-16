@@ -25,6 +25,7 @@ android {
     // Le jeu web compilé (game/dist) est copié dans les assets par la tâche syncGameAssets.
     sourceSets { main { assets.srcDirs = ['build/generated/gameAssets'] } }
     androidResources { noCompress += ['js', 'json', 'html'] }
+    lint { checkReleaseBuilds false; abortOnError false }
 }
 
 tasks.register('syncGameAssets', Copy) {

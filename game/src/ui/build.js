@@ -17,7 +17,7 @@ export class BuildUI {
     this.cursor = null; // {i,j} ou {key}
     this.rectStart = null;
     this.ghost = null;
-    this.cam = { x: 0, z: 0, dist: 30, yaw: 0.6, pitch: 1.0 };
+    this.cam = { x: 0, z: 0, dist: 30, yaw: 0.6, pitch: 1.15 };
     this.overlay = null;
     this.mode = null; // 'build' | 'world'
   }
@@ -151,8 +151,9 @@ export class BuildUI {
         else { this._lastTap = { i: ci, j: cj, t: performance.now() }; if (!this.app.input.isTouch) { this._result(B.placeFixture(type, ci, cj, B.rot)); this._lastTap = null; } }
       }
     }
-    this._updateGhost();
-    this.render();
+    const sig = JSON.stringify(this.cursor);
+    if (sig !== this._cursorSig || apply) { this._cursorSig = sig; this._updateGhost(); }
+    if (apply) this.render();
   }
   _result(r) {
     if (!r) return;
